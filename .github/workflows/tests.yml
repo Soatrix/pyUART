@@ -1,26 +1,25 @@
 name: MicroPython Tests
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
       - name: Install dependencies
-        run: pip install pytest pytest-micropython
+        run: sudo apt update && sudo apt install -y build-essential libffi-dev git
 
-      - name: Run tests
-        run: pytest --micropython tests/py_virtual_serial.py
+      - name: Build MicroPython Unix port
+        run: |
+          git clone https://github.com/micropython/micropython.git
+          cd micropython/ports/unix
+          make
+
+      - name: Run MicroPython tests
+        run: |
+          cd micropython/ports/unix
+          ./micropython ../../../tests/py_virtual_serial.py
