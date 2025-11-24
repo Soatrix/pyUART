@@ -1,24 +1,37 @@
-name: MicroPython Tests
+name: MicroPython CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  test:
+  micropython-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      # Step 1: Checkout your repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Install build dependencies
       - name: Install dependencies
-        run: sudo apt update && sudo apt install -y build-essential libffi-dev git
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libffi-dev git
 
+      # Step 3: Clone MicroPython
+      - name: Clone MicroPython
+        run: git clone https://github.com/micropython/micropython.git
+
+      # Step 4: Build MicroPython Unix port (without SSL/BTree)
       - name: Build MicroPython Unix port
         run: |
-          git clone https://github.com/micropython/micropython.git
           cd micropython/ports/unix
-          make
+          make -j$(nproc) CFLAGS_EXTRA="-DMICROPY_PY_SSL=0 -DMICROPY_PY_BTREE=0 -DMICROPY_PY_BLUETOOTH=0"
 
+      # Step 5: Run your MicroPython test file
       - name: Run MicroPython tests
         run: |
           cd micropython/ports/unix
